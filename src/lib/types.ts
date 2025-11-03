@@ -139,6 +139,146 @@ export interface Notification {
   duration?: number;
 }
 
+// ==================== EVENT MANAGEMENT TYPES ====================
+
+/**
+ * Event Category
+ */
+export interface EventCategory {
+  id: string;
+  name: string;
+  description: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/**
+ * Venue
+ */
+export interface Venue {
+  id: string;
+  name: string;
+  address: string;
+  capacity: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/**
+ * Ticket Type
+ */
+export interface TicketType {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  eventId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/**
+ * Event Status
+ */
+export type EventStatus = 'active' | 'inactive' | 'cancelled';
+
+/**
+ * Event
+ */
+export interface Event {
+  id: string;
+  name: string;
+  description: string;
+  date: string;
+  status: EventStatus;
+  venue: Venue;
+  category: EventCategory;
+  ticketTypes: TicketType[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/**
+ * Create Event DTO
+ */
+export interface CreateEventDTO {
+  name: string;
+  description: string;
+  date: string;
+  venueId: string;
+  categoryId: string;
+}
+
+/**
+ * Update Event DTO
+ */
+export interface UpdateEventDTO {
+  name?: string;
+  description?: string;
+  date?: string;
+  venueId?: string;
+  categoryId?: string;
+}
+
+/**
+ * Update Event Status DTO
+ */
+export interface UpdateEventStatusDTO {
+  status: EventStatus;
+}
+
+/**
+ * Create Ticket Type DTO
+ */
+export interface CreateTicketTypeDTO {
+  name: string;
+  price: number;
+  quantity: number;
+}
+
+/**
+ * Update Ticket Type DTO
+ */
+export interface UpdateTicketTypeDTO {
+  name?: string;
+  price?: number;
+  quantity?: number;
+}
+
+/**
+ * Create Event Category DTO
+ */
+export interface CreateEventCategoryDTO {
+  name: string;
+  description: string;
+}
+
+/**
+ * Update Event Category DTO
+ */
+export interface UpdateEventCategoryDTO {
+  name?: string;
+  description?: string;
+}
+
+/**
+ * Create Venue DTO
+ */
+export interface CreateVenueDTO {
+  name: string;
+  address: string;
+  capacity: number;
+}
+
+/**
+ * Update Venue DTO
+ */
+export interface UpdateVenueDTO {
+  name?: string;
+  address?: string;
+  capacity?: number;
+}
+
 // ==================== EXAMPLES - DOMAIN-SPECIFIC TYPES ====================
 
 /**

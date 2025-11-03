@@ -36,6 +36,14 @@ export const ROUTES = {
   // Admin routes (if needed)
   ADMIN: '/admin',
 
+  EVENTS: '/events',
+  EVENT_DETAIL: (id: string) => `/events/${id}`,
+  EVENT_CREATE: '/events/create',
+  EVENT_EDIT: (id: string) => `/events/${id}/edit`,
+  EVENT_TICKETS: (id: string) => `/events/${id}/tickets`,
+  ADMIN_CATEGORIES: '/admin/categories',
+  ADMIN_VENUES: '/admin/venues',
+
   // Add more routes based on your application needs
   // Example: USERS: '/users',
   // Example: USER_DETAIL: (id: string) => `/users/${id}`,
@@ -88,6 +96,22 @@ export const SUCCESS_MESSAGES = {
   UPDATE: 'Actualizado exitosamente',
   DELETE: 'Eliminado exitosamente',
   SAVE: 'Guardado exitosamente',
+} as const;
+
+// ==================== SUCCESS MESSAGES ====================
+
+// Event status labels
+export const EVENT_STATUS_LABELS = {
+  active: 'Activo',
+  inactive: 'Inactivo',
+  cancelled: 'Cancelado',
+} as const;
+
+// Event status colors (para badges)
+export const EVENT_STATUS_COLORS = {
+  active: 'green',
+  inactive: 'gray',
+  cancelled: 'red',
 } as const;
 
 // ==================== EXAMPLE CONSTANTS ====================
