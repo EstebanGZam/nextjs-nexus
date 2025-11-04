@@ -140,7 +140,7 @@ function TableHeader<T>({ columns, onSort, sortKey, sortOrder }: TableHeaderProp
           <th
             key={col.key}
             className={cn(
-              'px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-700 uppercase',
+              'px-6 py-3 text-center text-xs font-medium tracking-wider text-slate-700 uppercase',
               col.sortable && onSort && 'cursor-pointer select-none hover:bg-slate-100',
               col.headerClassName
             )}
@@ -212,7 +212,7 @@ export function createActionsColumn<T>(actions: (item: T) => React.ReactNode): C
     header: 'Acciones',
     render: actions,
     className: 'text-right',
-    headerClassName: 'text-right',
+    headerClassName: 'text-center',
   };
 }
 

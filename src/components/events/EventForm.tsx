@@ -10,11 +10,11 @@ import { useVenueStore } from '@/src/stores/useVenueStore';
 import type { Event, CreateEventDTO } from '@/src/lib/types';
 
 const eventSchema = z.object({
-  name: z.string().min(3, 'El nombre debe tener al menos 3 caracteres'),
+  title: z.string().min(3, 'El título debe tener al menos 3 caracteres'),
   description: z.string().min(10, 'La descripción debe tener al menos 10 caracteres'),
-  date: z.string().min(1, 'La fecha es requerida'),
-  venueId: z.string().min(1, 'Debes seleccionar un recinto'),
-  categoryId: z.string().min(1, 'Debes seleccionar una categoría'),
+  date: z.string().min(1, 'La fecha y hora son requeridas'),
+  venueId: z.string().uuid('Debes seleccionar un recinto válido'),
+  categoryId: z.string().uuid('Debes seleccionar una categoría válida'),
 });
 
 interface EventFormProps {
@@ -25,20 +25,26 @@ interface EventFormProps {
 }
 
 export default function EventForm({ initialData, onSubmit, onCancel, isLoading }: EventFormProps) {
-  const { categories, fetchCategories } = useCategoryStore();
-  const { venues, fetchVenues } = useVenueStore();
+  const {
+    categories,
+    fetchCategories,
+    error: categoryError,
+    isLoading: categoriesLoading,
+  } = useCategoryStore();
+  const { venues, fetchVenues, error: venueError, isLoading: venuesLoading } = useVenueStore();
 
   const getDateValue = (isoDate?: string) => {
     if (!isoDate) return '';
     try {
-      return isoDate.split('T')[0];
+      // Format to YYYY-MM-DDTHH:mm, required by datetime-local input
+      return isoDate.slice(0, 16);
     } catch {
       return '';
     }
   };
 
   const [values, setValues] = React.useState({
-    name: initialData?.name || '',
+    title: initialData?.title || '',
     description: initialData?.description || '',
     date: getDateValue(initialData?.date),
     venueId: initialData?.venue?.id || '',
@@ -73,10 +79,11 @@ export default function EventForm({ initialData, onSubmit, onCancel, isLoading }
       return;
     }
 
-    // Convert date to full ISO string before submitting
+    // Convert local datetime string to a Date object
+    const localDate = new Date(parse.data.date).toISOString();
     const dataToSend = {
       ...parse.data,
-      date: `${parse.data.date}T00:00:00.000Z`,
+      date: localDate,
     };
 
     try {
@@ -86,133 +93,161 @@ export default function EventForm({ initialData, onSubmit, onCancel, isLoading }
     }
   };
 
+  const dataLoading = categoriesLoading || venuesLoading;
+  const dataError = categoryError || venueError;
+
+  if (dataError) {
+    return (
+      <FormError
+        message={`No se pudieron cargar los datos necesarios para el formulario (recintos o categorías). Error: ${dataError}`}
+      />
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <FormError message={generalError} />
 
-      {/* Name */}
-      <div>
-        <label htmlFor="name" className="block text-sm font-medium text-slate-700">
-          Nombre del evento
-        </label>
-        <input
-          id="name"
-          name="name"
-          type="text"
-          value={values.name}
-          onChange={handleChange}
-          className={cn(
-            'mt-1 block w-full rounded-md border px-3 py-2 text-sm shadow-sm focus:ring-2 focus:outline-none',
-            errors.name
-              ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-              : 'border-slate-300 focus:border-slate-600 focus:ring-slate-600'
-          )}
-        />
-        {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name}</p>}
-      </div>
+      <fieldset disabled={dataLoading || isLoading} className="space-y-5">
+        {/* Title */}
+        <div>
+          <label htmlFor="title" className="block text-sm font-medium text-slate-700">
+            Título del evento
+          </label>
+          <input
+            id="title"
+            name="title"
+            type="text"
+            value={values.title}
+            onChange={handleChange}
+            className={cn(
+              'mt-1 block w-full rounded-md border bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:ring-2 focus:outline-none',
+              errors.title
+                ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
+                : 'border-slate-300 focus:border-slate-600 focus:ring-slate-600',
+              'disabled:cursor-not-allowed disabled:bg-slate-100'
+            )}
+          />
+          {errors.title && <p className="mt-1 text-xs text-red-600">{errors.title}</p>}
+        </div>
 
-      {/* Description */}
-      <div>
-        <label htmlFor="description" className="block text-sm font-medium text-slate-700">
-          Descripción
-        </label>
-        <textarea
-          id="description"
-          name="description"
-          rows={4}
-          value={values.description}
-          onChange={handleChange}
-          className={cn(
-            'mt-1 block w-full rounded-md border px-3 py-2 text-sm shadow-sm focus:ring-2 focus:outline-none',
-            errors.description
-              ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-              : 'border-slate-300 focus:border-slate-600 focus:ring-slate-600'
-          )}
-        />
-        {errors.description && <p className="mt-1 text-xs text-red-600">{errors.description}</p>}
-      </div>
+        {/* Description */}
+        <div>
+          <label htmlFor="description" className="block text-sm font-medium text-slate-700">
+            Descripción
+          </label>
+          <textarea
+            id="description"
+            name="description"
+            rows={4}
+            value={values.description}
+            onChange={handleChange}
+            className={cn(
+              'mt-1 block w-full rounded-md border bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:ring-2 focus:outline-none',
+              errors.description
+                ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
+                : 'border-slate-300 focus:border-slate-600 focus:ring-slate-600',
+              'disabled:cursor-not-allowed disabled:bg-slate-100'
+            )}
+          />
+          {errors.description && <p className="mt-1 text-xs text-red-600">{errors.description}</p>}
+        </div>
 
-      {/* Date */}
-      <div>
-        <label htmlFor="date" className="block text-sm font-medium text-slate-700">
-          Fecha
-        </label>
-        <input
-          id="date"
-          name="date"
-          type="date"
-          value={values.date}
-          onChange={handleChange}
-          className={cn(
-            'mt-1 block w-full rounded-md border px-3 py-2 text-sm shadow-sm focus:ring-2 focus:outline-none',
-            errors.date
-              ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-              : 'border-slate-300 focus:border-slate-600 focus:ring-slate-600'
-          )}
-        />
-        {errors.date && <p className="mt-1 text-xs text-red-600">{errors.date}</p>}
-      </div>
+        {/* Date */}
+        <div>
+          <label htmlFor="date" className="block text-sm font-medium text-slate-700">
+            Fecha y Hora
+          </label>
+          <input
+            id="date"
+            name="date"
+            type="datetime-local"
+            value={values.date}
+            onChange={handleChange}
+            className={cn(
+              'mt-1 block w-full rounded-md border bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:ring-2 focus:outline-none',
+              errors.date
+                ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
+                : 'border-slate-300 focus:border-slate-600 focus:ring-slate-600',
+              'disabled:cursor-not-allowed disabled:bg-slate-100'
+            )}
+          />
+          {errors.date && <p className="mt-1 text-xs text-red-600">{errors.date}</p>}
+        </div>
 
-      {/* Venue */}
-      <div>
-        <label htmlFor="venueId" className="block text-sm font-medium text-slate-700">
-          Recinto
-        </label>
-        <select
-          id="venueId"
-          name="venueId"
-          value={values.venueId}
-          onChange={handleChange}
-          className={cn(
-            'mt-1 block w-full rounded-md border px-3 py-2 text-sm shadow-sm focus:ring-2 focus:outline-none',
-            errors.venueId
-              ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-              : 'border-slate-300 focus:border-slate-600 focus:ring-slate-600'
-          )}
-        >
-          <option value="">Selecciona un recinto</option>
-          {venues.map((venue) => (
-            <option key={venue.id} value={venue.id}>
-              {venue.name} - Capacidad: {venue.capacity}
+        {/* Venue */}
+        <div>
+          <label htmlFor="venueId" className="block text-sm font-medium text-slate-700">
+            Recinto
+          </label>
+          <select
+            id="venueId"
+            name="venueId"
+            value={values.venueId}
+            onChange={handleChange}
+            className={cn(
+              'mt-1 block w-full rounded-md border bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:ring-2 focus:outline-none',
+              errors.venueId
+                ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
+                : 'border-slate-300 focus:border-slate-600 focus:ring-slate-600',
+              'disabled:cursor-not-allowed disabled:bg-slate-100'
+            )}
+          >
+            <option value="">
+              {dataLoading ? 'Cargando recintos...' : 'Selecciona un recinto'}
             </option>
-          ))}
-        </select>
-        {errors.venueId && <p className="mt-1 text-xs text-red-600">{errors.venueId}</p>}
-      </div>
+            {venues.map((venue) => (
+              <option key={venue.id} value={venue.id}>
+                {venue.name} - Capacidad: {venue.capacity}
+              </option>
+            ))}
+          </select>
+          {errors.venueId && <p className="mt-1 text-xs text-red-600">{errors.venueId}</p>}
+        </div>
 
-      {/* Category */}
-      <div>
-        <label htmlFor="categoryId" className="block text-sm font-medium text-slate-700">
-          Categoría
-        </label>
-        <select
-          id="categoryId"
-          name="categoryId"
-          value={values.categoryId}
-          onChange={handleChange}
-          className={cn(
-            'mt-1 block w-full rounded-md border px-3 py-2 text-sm shadow-sm focus:ring-2 focus:outline-none',
-            errors.categoryId
-              ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-              : 'border-slate-300 focus:border-slate-600 focus:ring-slate-600'
-          )}
-        >
-          <option value="">Selecciona una categoría</option>
-          {categories.map((cat) => (
-            <option key={cat.id} value={cat.id}>
-              {cat.name}
+        {/* Category */}
+        <div>
+          <label htmlFor="categoryId" className="block text-sm font-medium text-slate-700">
+            Categoría
+          </label>
+          <select
+            id="categoryId"
+            name="categoryId"
+            value={values.categoryId}
+            onChange={handleChange}
+            className={cn(
+              'mt-1 block w-full rounded-md border bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:ring-2 focus:outline-none',
+              errors.categoryId
+                ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
+                : 'border-slate-300 focus:border-slate-600 focus:ring-slate-600',
+              'disabled:cursor-not-allowed disabled:bg-slate-100'
+            )}
+          >
+            <option value="">
+              {dataLoading ? 'Cargando categorías...' : 'Selecciona una categoría'}
             </option>
-          ))}
-        </select>
-        {errors.categoryId && <p className="mt-1 text-xs text-red-600">{errors.categoryId}</p>}
-      </div>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
+          {errors.categoryId && <p className="mt-1 text-xs text-red-600">{errors.categoryId}</p>}
+        </div>
+      </fieldset>
 
       {/* Actions */}
       <div className="flex gap-3 pt-4">
-        <Button type="button" variant="secondary" fullWidth onClick={onCancel} disabled={isLoading}>
+        <Button
+          type="button"
+          variant="secondary"
+          fullWidth
+          onClick={onCancel}
+          disabled={isLoading || dataLoading}
+        >
           Cancelar
         </Button>
-        <Button type="submit" fullWidth disabled={isLoading}>
+        <Button type="submit" fullWidth disabled={isLoading || dataLoading}>
           {isLoading ? 'Guardando...' : initialData ? 'Actualizar' : 'Crear Evento'}
         </Button>
       </div>

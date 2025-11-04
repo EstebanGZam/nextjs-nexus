@@ -61,7 +61,7 @@ export default function ManageEventTicketsPage() {
         </Button>
         <h1 className="text-2xl font-bold text-slate-800">Gestión de Tickets</h1>
         <p className="mt-2 text-sm text-slate-600">
-          Configura los tipos de tickets para &quot;{currentEvent.name}&quot;
+          Configura los tipos de tickets para &quot;{currentEvent.title}&quot;
         </p>
       </div>
 

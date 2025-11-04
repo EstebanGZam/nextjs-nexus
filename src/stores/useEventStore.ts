@@ -39,8 +39,12 @@ interface EventActions {
   // Ticket Types
   fetchTicketTypes: (eventId: string) => Promise<TicketType[]>;
   createTicketType: (eventId: string, data: CreateTicketTypeDTO) => Promise<TicketType>;
-  updateTicketType: (typeId: string, data: UpdateTicketTypeDTO) => Promise<TicketType>;
-  deleteTicketType: (typeId: string) => Promise<void>;
+  updateTicketType: (
+    eventId: string,
+    typeId: string,
+    data: UpdateTicketTypeDTO
+  ) => Promise<TicketType>;
+  deleteTicketType: (eventId: string, typeId: string) => Promise<void>;
 }
 
 type EventStore = EventState & EventActions;
@@ -97,6 +101,8 @@ export const useEventStore = create<EventStore>((set, get) => ({
       set({ isLoading: true, error: null });
 
       const event = await eventService.getEventById(id);
+
+      console.log('DEBUG: Raw event data from API:', JSON.stringify(event, null, 2));
 
       set({
         currentEvent: event,
@@ -226,7 +232,7 @@ export const useEventStore = create<EventStore>((set, get) => ({
         set({
           currentEvent: {
             ...current,
-            ticketTypes: [...current.ticketTypes, ticketType],
+            ticketTypes: [...(current.ticketTypes || []), ticketType],
           },
         });
       }
@@ -239,9 +245,9 @@ export const useEventStore = create<EventStore>((set, get) => ({
     }
   },
 
-  updateTicketType: async (typeId, data) => {
+  updateTicketType: async (eventId, typeId, data) => {
     try {
-      const ticketType = await eventService.updateTicketType(typeId, data);
+      const ticketType = await eventService.updateTicketType(eventId, typeId, data);
 
       // Update current event if loaded
       const current = get().currentEvent;
@@ -249,7 +255,9 @@ export const useEventStore = create<EventStore>((set, get) => ({
         set({
           currentEvent: {
             ...current,
-            ticketTypes: current.ticketTypes.map((tt) => (tt.id === typeId ? ticketType : tt)),
+            ticketTypes: (current.ticketTypes || []).map((tt) =>
+              tt.id === typeId ? ticketType : tt
+            ),
           },
         });
       }
@@ -262,9 +270,9 @@ export const useEventStore = create<EventStore>((set, get) => ({
     }
   },
 
-  deleteTicketType: async (typeId) => {
+  deleteTicketType: async (eventId, typeId) => {
     try {
-      await eventService.deleteTicketType(typeId);
+      await eventService.deleteTicketType(eventId, typeId);
 
       // Update current event if loaded
       const current = get().currentEvent;
@@ -272,7 +280,7 @@ export const useEventStore = create<EventStore>((set, get) => ({
         set({
           currentEvent: {
             ...current,
-            ticketTypes: current.ticketTypes.filter((tt) => tt.id !== typeId),
+            ticketTypes: (current.ticketTypes || []).filter((tt) => tt.id !== typeId),
           },
         });
       }

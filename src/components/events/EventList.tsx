@@ -57,14 +57,14 @@ export default function EventList({
   if (viewMode === 'table') {
     const columns: Column<Event>[] = [
       {
-        key: 'name',
+        key: 'title',
         header: 'Evento',
-        render: (event) => (
-          <div>
-            <p className="font-semibold text-slate-800">{event.name}</p>
-            <p className="text-xs text-slate-500">{event.category?.name ?? 'Sin categoría'}</p>
-          </div>
-        ),
+        render: (event) => <p className="font-semibold text-slate-800">{event.title}</p>,
+      },
+      {
+        key: 'category',
+        header: 'Categoría',
+        render: (event) => event.category?.name ?? 'Sin categoría',
       },
       {
         key: 'date',

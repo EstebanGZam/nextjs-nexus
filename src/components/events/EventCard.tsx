@@ -1,6 +1,5 @@
 'use client';
 
-import * as React from 'react';
 import Link from 'next/link';
 import { formatDate, formatCurrency } from '@/src/lib/utils';
 import EventStatusBadge from './EventStatusBadge';
@@ -33,7 +32,7 @@ export default function EventCard({
       <Link href={`/events/${event.id}`} className="block p-6">
         <div className="mb-3 flex items-start justify-between gap-3">
           <h3 className="text-lg font-semibold text-slate-900 group-hover:text-slate-700">
-            {event.name}
+            {event.title}
           </h3>
           <EventStatusBadge status={event.status} />
         </div>

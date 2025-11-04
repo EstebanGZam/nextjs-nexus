@@ -170,11 +170,10 @@ export interface Venue {
 export interface TicketType {
   id: string;
   name: string;
+  description: string;
   price: number;
   quantity: number;
-  eventId?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  eventId: string;
 }
 
 /**
@@ -187,7 +186,7 @@ export type EventStatus = 'active' | 'inactive' | 'cancelled' | 'draft' | 'pre_s
  */
 export interface Event {
   id: string;
-  name: string;
+  title: string;
   description: string;
   date: string;
   status: EventStatus;
@@ -202,7 +201,7 @@ export interface Event {
  * Create Event DTO
  */
 export interface CreateEventDTO {
-  name: string;
+  title: string;
   description: string;
   date: string;
   venueId: string;
@@ -213,7 +212,7 @@ export interface CreateEventDTO {
  * Update Event DTO
  */
 export interface UpdateEventDTO {
-  name?: string;
+  title?: string;
   description?: string;
   date?: string;
   venueId?: string;
@@ -232,6 +231,7 @@ export interface UpdateEventStatusDTO {
  */
 export interface CreateTicketTypeDTO {
   name: string;
+  description: string;
   price: number;
   quantity: number;
 }
@@ -241,6 +241,7 @@ export interface CreateTicketTypeDTO {
  */
 export interface UpdateTicketTypeDTO {
   name?: string;
+  description?: string;
   price?: number;
   quantity?: number;
 }

@@ -69,7 +69,7 @@ export default function EditEventPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-slate-800">Editar Evento</h1>
         <p className="mt-2 text-sm text-slate-600">
-          Actualiza la información del evento &quot;{currentEvent.name}&quot;
+          Actualiza la información del evento &quot;{currentEvent.title}&quot;
         </p>
       </div>
 

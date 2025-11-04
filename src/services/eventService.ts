@@ -70,21 +70,26 @@ async function getTicketTypes(eventId: string): Promise<TicketType[]> {
  * Create ticket type for an event
  */
 async function createTicketType(eventId: string, data: CreateTicketTypeDTO): Promise<TicketType> {
+  console.log('DEBUG: Data being sent to createTicketType:', { eventId, data });
   return post<TicketType, CreateTicketTypeDTO>(`/events/${eventId}/ticket-types`, data);
 }
 
 /**
  * Update ticket type
  */
-async function updateTicketType(typeId: string, data: UpdateTicketTypeDTO): Promise<TicketType> {
-  return patch<TicketType, UpdateTicketTypeDTO>(`/ticket-types/${typeId}`, data);
+async function updateTicketType(
+  eventId: string,
+  typeId: string,
+  data: UpdateTicketTypeDTO
+): Promise<TicketType> {
+  return patch<TicketType, UpdateTicketTypeDTO>(`/events/${eventId}/ticket-types/${typeId}`, data);
 }
 
 /**
  * Delete ticket type
  */
-async function deleteTicketType(typeId: string): Promise<void> {
-  return del<void>(`/ticket-types/${typeId}`);
+async function deleteTicketType(eventId: string, typeId: string): Promise<void> {
+  return del<void>(`/events/${eventId}/ticket-types/${typeId}`);
 }
 
 const eventService = {
