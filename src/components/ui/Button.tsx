@@ -5,19 +5,21 @@ import { cn } from '@/src/lib/utils';
 
 export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: 'primary' | 'secondary' | 'ghost';
+  size?: 'sm' | 'md';
   fullWidth?: boolean;
 };
 
 export default function Button({
   className,
   variant = 'primary',
+  size = 'md',
   fullWidth,
   disabled,
   children,
   ...props
 }: ButtonProps) {
   const base =
-    'inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed h-10 px-4 py-2';
+    'inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed';
 
   const variants: Record<NonNullable<ButtonProps['variant']>, string> = {
     primary: 'bg-slate-800 text-white hover:bg-slate-900 focus-visible:ring-slate-400',
@@ -25,9 +27,14 @@ export default function Button({
     ghost: 'bg-transparent text-slate-800 hover:bg-slate-100 focus-visible:ring-slate-300',
   };
 
+  const sizes: Record<NonNullable<ButtonProps['size']>, string> = {
+    md: 'h-10 px-4 py-2',
+    sm: 'h-8 rounded-md px-3',
+  };
+
   return (
     <button
-      className={cn(base, variants[variant], fullWidth && 'w-full', className)}
+      className={cn(base, variants[variant], sizes[size], fullWidth && 'w-full', className)}
       disabled={disabled}
       {...props}
     >
