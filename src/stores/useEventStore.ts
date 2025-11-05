@@ -51,7 +51,7 @@ interface EventActions {
 
 type EventStore = EventState & EventActions;
 
-export const useEventStore = create<EventStore>((set, get) => ({
+export const useEventStore = create<EventStore>((set) => ({
   // Initial state
   events: [],
   currentEvent: null,
