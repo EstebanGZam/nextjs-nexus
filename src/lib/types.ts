@@ -281,6 +281,8 @@ export interface CreateUserDto {
   email: string;
   password?: string; // Optional if creation/invitation doesn't require a password
   roleIds?: string[]; // IDs of the roles to assign
+  isBlocked?: boolean;
+  isBloqued?: boolean;
 }
 
 /**
@@ -294,6 +296,8 @@ export interface UpdateUserDto {
   email?: string;
   password?: string; // To reset the password
   roleIds?: string[]; // To update the list of roles
+  isBlocked?: boolean;
+  isBloqued?: boolean;
 }
 
 // ==================== API RESPONSE TYPES (GENERIC) ====================

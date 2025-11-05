@@ -5,45 +5,28 @@ import { useForm, type SubmitHandler, type DefaultValues } from 'react-hook-form
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import type { User, Role, UpdateUserDto } from '@/src/lib/types';
+import type { Role, CreateUserDto } from '@/src/lib/types';
 import userService from '@/src/services/userService';
 import roleService from '@/src/services/roleService';
 import Button from '@/src/components/ui/Button';
 import FormError from '@/src/components/ui/FormError';
 
-interface UserFormProps {
-  userToEdit?: User | null;
-  onSuccess: () => void;
-}
-
-const FormSchema = z.object({
+const CreateSchema = z.object({
   firstName: z.string().min(1, 'Requerido'),
   lastName: z.string().min(1, 'Requerido'),
   email: z.string().email('Email inválido'),
+  password: z
+    .string()
+    .min(8, 'Mínimo 8 caracteres')
+    .max(50, 'Máximo 50 caracteres')
+    .refine((v) => /[a-z]/.test(v) && /[A-Z]/.test(v) && /\d/.test(v), {
+      message: 'Debe incluir mayúscula, minúscula y número',
+    }),
   roleIds: z.array(z.string().min(1)).min(1, 'El usuario debe tener al menos 1 rol'),
 });
 
-type FormValues = z.infer<typeof FormSchema>;
-
-function deriveInitialRoleIds(user: unknown): string[] {
-  const u = user as { roleIds?: unknown; roles?: unknown } | null | undefined;
-  if (!u) return [];
-  if (Array.isArray(u.roleIds)) {
-    return (u.roleIds as unknown[]).filter((x): x is string => typeof x === 'string');
-  }
-  if (Array.isArray(u.roles)) {
-    const raw = u.roles as unknown[];
-    const asStrings = raw.filter((x): x is string => typeof x === 'string');
-    if (asStrings.length) return asStrings;
-    return raw
-      .map((r) => {
-        const id = (r as { id?: unknown })?.id;
-        return typeof id === 'string' ? id : undefined;
-      })
-      .filter((x): x is string => Boolean(x));
-  }
-  return [];
-}
+type FormValues = z.infer<typeof CreateSchema>;
+type Props = { onSuccess: () => void };
 
 function hasDataArray<T>(v: unknown): v is { data: T[] } {
   return !!v && typeof v === 'object' && Array.isArray((v as { data?: unknown }).data);
@@ -66,52 +49,42 @@ function extractErrorMessage(err: unknown): string {
   try {
     return JSON.stringify(err);
   } catch {
-    return 'Unknown error';
+    return 'Error desconocido';
   }
 }
 
-export default function UserForm({ userToEdit, onSuccess }: UserFormProps) {
-  const isEditMode = Boolean(userToEdit);
-
+export default function UserCreateForm({ onSuccess }: Props) {
   const [allRoles, setAllRoles] = useState<Role[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
   const defaultValues: DefaultValues<FormValues> = {
-    firstName: userToEdit?.firstName ?? '',
-    lastName: userToEdit?.lastName ?? '',
-    email: userToEdit?.email ?? '',
-    roleIds: deriveInitialRoleIds(userToEdit),
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    roleIds: [],
   };
 
   const {
     register,
     handleSubmit,
-    reset,
     setError,
     setValue,
     watch,
     formState: { errors, isSubmitting },
+    reset,
   } = useForm<FormValues>({
-    resolver: zodResolver(FormSchema),
+    resolver: zodResolver(CreateSchema),
     defaultValues,
   });
-
-  useEffect(() => {
-    reset({
-      firstName: userToEdit?.firstName ?? '',
-      lastName: userToEdit?.lastName ?? '',
-      email: userToEdit?.email ?? '',
-      roleIds: deriveInitialRoleIds(userToEdit),
-    });
-  }, [userToEdit, reset]);
 
   useEffect(() => {
     const fetchRoles = async () => {
       try {
         const resp = await roleService.getRoles({ page: 1, limit: 200 });
         setAllRoles(asRoles(resp));
-      } catch (error: unknown) {
+      } catch (error) {
         console.error('Failed to fetch roles:', error);
         setAllRoles([]);
         setFormError('No se pudieron cargar los roles.');
@@ -120,6 +93,7 @@ export default function UserForm({ userToEdit, onSuccess }: UserFormProps) {
     fetchRoles();
   }, []);
 
+  // evitar advertencia de deps en useMemo: estabilizamos la referencia
   const roleIdsWatched = watch('roleIds');
   const assignedIds = useMemo(() => roleIdsWatched ?? [], [roleIdsWatched]);
 
@@ -175,22 +149,19 @@ export default function UserForm({ userToEdit, onSuccess }: UserFormProps) {
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     setIsLoading(true);
     setFormError(null);
-
     try {
-      if (!data.roleIds || data.roleIds.length < 1) {
-        setError('roleIds', { type: 'manual', message: 'El usuario debe tener al menos 1 rol' });
-        setIsLoading(false);
-        return;
-      }
-
-      if (isEditMode && userToEdit) {
-        const updateData: UpdateUserDto = { roleIds: data.roleIds };
-        await userService.updateUser(userToEdit.id, updateData);
-      }
-
+      const payload: CreateUserDto = {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        password: data.password,
+        roleIds: data.roleIds,
+      };
+      await userService.createUser(payload);
       onSuccess();
-    } catch (error: unknown) {
-      console.error('Form submission error:', error);
+      reset(defaultValues);
+    } catch (error) {
+      console.error('Create user error:', error);
       setFormError(extractErrorMessage(error));
     } finally {
       setIsLoading(false);
@@ -215,9 +186,8 @@ export default function UserForm({ userToEdit, onSuccess }: UserFormProps) {
             type="text"
             {...register('firstName')}
             className={inputStyle}
-            disabled
-            readOnly
             aria-invalid={Boolean(errors.firstName)}
+            autoComplete="given-name"
           />
           {errors.firstName && <FormError message={String(errors.firstName.message)} />}
         </div>
@@ -231,9 +201,8 @@ export default function UserForm({ userToEdit, onSuccess }: UserFormProps) {
             type="text"
             {...register('lastName')}
             className={inputStyle}
-            disabled
-            readOnly
             aria-invalid={Boolean(errors.lastName)}
+            autoComplete="family-name"
           />
           {errors.lastName && <FormError message={String(errors.lastName.message)} />}
         </div>
@@ -248,11 +217,26 @@ export default function UserForm({ userToEdit, onSuccess }: UserFormProps) {
           type="email"
           {...register('email')}
           className={inputStyle}
-          disabled
-          readOnly
           aria-invalid={Boolean(errors.email)}
+          autoComplete="email"
         />
         {errors.email && <FormError message={String(errors.email.message)} />}
+      </div>
+
+      <div>
+        <label htmlFor="password" className={labelStyle}>
+          Password
+        </label>
+        <input
+          id="password"
+          type="password"
+          {...register('password')}
+          className={inputStyle}
+          placeholder="Mínimo 8, máx. 50. Con mayúscula, minúscula y número."
+          aria-invalid={Boolean(errors.password)}
+          autoComplete="new-password"
+        />
+        {errors.password && <FormError message={String(errors.password.message)} />}
       </div>
 
       <div>
@@ -357,7 +341,7 @@ export default function UserForm({ userToEdit, onSuccess }: UserFormProps) {
 
       <div className="flex justify-end">
         <Button type="submit" disabled={isLoading || isSubmitting}>
-          {isLoading || isSubmitting ? 'Guardando...' : 'Update User'}
+          {isLoading || isSubmitting ? 'Creando...' : 'Crear Usuario'}
         </Button>
       </div>
     </form>
