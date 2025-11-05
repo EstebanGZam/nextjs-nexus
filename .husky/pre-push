@@ -4,12 +4,9 @@ echo "🚀 Running pre-push checks..."
 echo "🔎 Type checking..."
 npm run type-check
 
-# Build check
-echo "🏗️ Building project..."
-npm run build
-
-# Run tests (cuando se implementen)
-# echo "🧪 Running tests..."
-# npm test
+# Run unit tests with coverage
+echo "🧪 Running unit tests with coverage..."
+npm run test:coverage
 
 echo "✅ Pre-push checks passed!"
+echo "ℹ️  Note: Build and E2E tests will run in CI pipeline"
