@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 import { API_CONFIG, AUTH_CONFIG, ERROR_MESSAGES } from './constants';
 import { getLocalStorage, setLocalStorage, removeLocalStorage } from './utils';
-import type { ApiError, ApiResponse } from './types';
+import type { ApiError } from './types';
 
 /**
  * Create axios instance with default configuration
