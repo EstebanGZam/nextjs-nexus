@@ -3,19 +3,13 @@
 import { useEffect } from 'react';
 import { useAuthStore } from '@/src/stores/useAuthStore';
 
-/**
- * Custom hook to access auth store with React 19 optimization
- * Uses individual selectors to avoid getSnapshot warnings
- */
 export function useAuth() {
-  // State selectors
   const user = useAuthStore((s) => s.user);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isLoading = useAuthStore((s) => s.isLoading);
   const error = useAuthStore((s) => s.error);
   const twoFactorEnabled = useAuthStore((s) => s.twoFactorEnabled);
 
-  // Action selectors
   const setUser = useAuthStore((s) => s.setUser);
   const setTokens = useAuthStore((s) => s.setTokens);
   const setLoading = useAuthStore((s) => s.setLoading);
@@ -27,21 +21,28 @@ export function useAuth() {
   const fetchProfile = useAuthStore((s) => s.fetchProfile);
   const clearError = useAuthStore((s) => s.clearError);
 
-  // Initialize auth state on mount
+  const getRoles = useAuthStore((s) => s.getRoles);
+  const getPermissions = useAuthStore((s) => s.getPermissions);
+  const hasPermission = useAuthStore((s) => s.hasPermission);
+
+  // Active Role methods
+  const activeRole = useAuthStore((s) => s.activeRole);
+  const getActiveRole = useAuthStore((s) => s.getActiveRole);
+  const switchRole = useAuthStore((s) => s.switchRole);
+  const getAvailableRoles = useAuthStore((s) => s.getAvailableRoles);
+
   useEffect(() => {
-    checkAuth();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (isLoading) {
+      checkAuth();
+    }
+  }, [isLoading, checkAuth]);
 
   return {
-    // State
     user,
     isAuthenticated,
     isLoading,
     error,
     twoFactorEnabled,
-
-    // Actions
     setUser,
     setTokens,
     setLoading,
@@ -52,7 +53,21 @@ export function useAuth() {
     checkAuth,
     fetchProfile,
     clearError,
+    getRoles,
+    getPermissions,
+    hasPermission,
+    // Active Role
+    activeRole,
+    getActiveRole,
+    switchRole,
+    getAvailableRoles,
   } as const;
 }
+
+/** Hook optimizado para permisos. Export nombrado. */
+export const useCan = (permissionName: string): boolean => {
+  // Se vuelve a evaluar cuando cambie el store y solo re-renderiza si el booleano cambia
+  return useAuthStore((state) => state.hasPermission(permissionName));
+};
 
 export default useAuth;

@@ -6,8 +6,8 @@ import { toast } from 'react-hot-toast';
 import EventList from '@/src/components/events/EventList';
 import ConfirmDialog from '@/src/components/ui/ConfirmDialog';
 import { useEventStore } from '@/src/stores/useEventStore';
+import { useRequireRole } from '@/src/hooks/useRequireRole';
 import { useCategoryStore } from '@/src/stores/useCategoryStore';
-import useRequireAuth from '@/src/hooks/useRequireAuth';
 import { ROUTES } from '@/src/lib/constants';
 import type { Event, EventStatus } from '@/src/lib/types';
 
@@ -72,7 +72,7 @@ function RejectionModal({
 
 export default function AdminEventsPage() {
   const router = useRouter();
-  const { isAuthenticated, isLoading: authLoading } = useRequireAuth();
+  const { isAuthorized, isLoading: authLoading } = useRequireRole('ADMINISTRATOR');
 
   const {
     events,
@@ -92,12 +92,12 @@ export default function AdminEventsPage() {
   const [isRejecting, setIsRejecting] = React.useState(false);
 
   React.useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthorized) {
       fetchEvents({ page: 1, limit: 10 }).catch(() => {
         toast.error('Error al cargar eventos');
       });
     }
-  }, [isAuthenticated, fetchEvents]);
+  }, [isAuthorized, fetchEvents]);
 
   const handlePageChange = React.useCallback(
     (page: number) => {
@@ -178,7 +178,7 @@ export default function AdminEventsPage() {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthorized) {
     return null;
   }
 

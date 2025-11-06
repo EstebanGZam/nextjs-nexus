@@ -49,7 +49,22 @@ export enum PaymentStatus {
 // ==================== CORE ENTITIES ====================
 
 /**
- * User type - matches backend ProfileResponseDto from /auth/me
+ * Role type - matches backend ResponseRoleDto
+ */
+export interface Role {
+  id: string;
+  name: string;
+  description?: string;
+  permissionIds?: string[]; // Optional when coming from backend with full permissions
+  isGeneric?: boolean; // <- visible en lecturas, NO se envía
+  permissions?: Array<{
+    id: string;
+    name: string;
+  }>;
+}
+
+/**
+ * User type - matches backend ResponseUserDto and ProfileResponseDto
  */
 export interface User {
   id: string;
@@ -59,33 +74,9 @@ export interface User {
   twoFactorEnabled?: boolean;
   createdAt: Date | string;
   roleIds: string[];
-  roles?: Array<{
-    id: string;
-    name: string;
-    permissions: Array<{
-      id: string;
-      name: string;
-    }>;
-  }>;
-}
-
-/**
- * Role type - matches backend ResponseRoleDto
- */
-export interface Role {
-  id: string;
-  name: string;
-  description?: string;
-  permissionIds: string[];
-}
-
-/**
- * Permission type
- */
-export interface Permission {
-  id: string;
-  name: string;
-  description?: string;
+  roles?: Role[];
+  isBlocked?: boolean;
+  isBloqued?: boolean;
 }
 
 /**
@@ -261,6 +252,15 @@ export interface LoginResponse {
   accessToken: string;
 }
 
+export interface Permission {
+  id: string;
+  name: string;
+  code: string; // p.ej. 'READ_USER', 'UPDATE_EVENT'
+  description?: string;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
+}
+
 // ==================== DTO TYPES (CREATE/UPDATE) ====================
 
 /**
@@ -286,6 +286,50 @@ export interface CreatePurchaseDto {
   eventId: string;
   ticketTypeId: string;
   quantity: number;
+  firstName: string;
+  lastName: string;
+  [key: string]: unknown;
+}
+
+/**
+ * DTO (Data Transfer Object) for creating a new user.
+ * Based on the backend's create-user.dto.ts.
+ */
+export interface CreateUserDto {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password?: string; // Optional if creation/invitation doesn't require a password
+  roleIds?: string[]; // IDs of the roles to assign
+  isBlocked?: boolean;
+  isBloqued?: boolean;
+}
+
+/**
+ * DTO for updating an existing user.
+ * Based on the backend's update-user.dto.ts.
+ * All fields are optional.
+ */
+export interface UpdateUserDto {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  password?: string; // To reset the password
+  roleIds?: string[]; // To update the list of roles
+  isBlocked?: boolean;
+  isBloqued?: boolean;
+}
+
+export interface CreateRoleDto {
+  name: string;
+  description?: string;
+  permissionIds: string[];
+}
+
+export interface UpdateRoleDto {
+  name?: string;
+  description?: string;
+  permissionIds?: string[];
 }
 
 // ==================== API RESPONSE TYPES (GENERIC) ====================
