@@ -39,11 +39,14 @@ export enum PaymentStatus {
 /**
  * Role type - matches backend ResponseRoleDto
  */
+// ...resto de tus imports y tipos
+
 export interface Role {
   id: string;
   name: string;
   description?: string;
   permissionIds: string[];
+  isGeneric?: boolean; // <- visible en lecturas, NO se envía
 }
 
 /**
@@ -57,16 +60,7 @@ export interface User {
   twoFactorEnabled?: boolean;
   createdAt: Date | string;
   roleIds: string[];
-  roles?: Role[]; // <-- MODIFICACIÓN: Añadido para incluir info de roles
-}
-
-/**
- * Permission type
- */
-export interface Permission {
-  id: string;
-  name: string;
-  description?: string;
+  roles?: Role[];
 }
 
 /**
@@ -241,6 +235,15 @@ export interface LoginResponse {
   accessToken: string;
 }
 
+export interface Permission {
+  id: string;
+  name: string;
+  code: string; // p.ej. 'READ_USER', 'UPDATE_EVENT'
+  description?: string;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
+}
+
 // ==================== DTO TYPES (CREATE/UPDATE) ====================
 
 /**
@@ -298,6 +301,18 @@ export interface UpdateUserDto {
   roleIds?: string[]; // To update the list of roles
   isBlocked?: boolean;
   isBloqued?: boolean;
+}
+
+export interface CreateRoleDto {
+  name: string;
+  description?: string;
+  permissionIds: string[];
+}
+
+export interface UpdateRoleDto {
+  name?: string;
+  description?: string;
+  permissionIds?: string[];
 }
 
 // ==================== API RESPONSE TYPES (GENERIC) ====================

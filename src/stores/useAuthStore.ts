@@ -30,10 +30,7 @@ function msgFromUnknown(e: unknown, fallback = 'Unexpected error'): string {
 }
 
 /**
- * Extrae nombres/ids de roles robustamente:
- * - Si el backend manda user.roleIds: string[] → lo retornamos.
- * - Si manda user.roles: string[] → lo retornamos.
- * - Si manda user.roles: { name }[] → retornamos name[].
+ * Extrae nombres/ids de roles robustamente.
  */
 function extractRoleNames(user: User | null): string[] {
   const u = user as unknown as { roleIds?: unknown; roles?: unknown };
@@ -44,7 +41,6 @@ function extractRoleNames(user: User | null): string[] {
     const rolesArr = u.roles as unknown[];
     const byString = rolesArr.filter(isNonEmptyString) as string[];
     if (byString.length) return byString;
-    // roles: { name?: string }[]
     return rolesArr
       .map((r) => {
         const name = (r as { name?: unknown })?.name;
@@ -56,10 +52,7 @@ function extractRoleNames(user: User | null): string[] {
 }
 
 /**
- * Extrae permisos cuando existan:
- * - user.permissions: string[] directo
- * - user.roles: { permissions: (string[] | {name:string}[]) }[]
- * Si solo tienes roleIds, esto quedará [] (y está bien hasta que resuelvas permisos aparte).
+ * Extrae permisos cuando existan.
  */
 function extractPermissionNames(user: User | null): string[] {
   const u = user as unknown as { permissions?: unknown; roles?: unknown };
@@ -177,15 +170,20 @@ export const useAuthStore = create<AuthStore>()(
           set({ isLoading: true, error: null });
           const result = await authService.login(email, password);
 
+          // Si requiere 2FA, no tenemos tokens ni perfil todavía.
           if ('requires2FA' in result && result.requires2FA) {
             set({ isLoading: false, twoFactorEnabled: true });
             return result;
           }
 
+          // Guardar tokens y traer el perfil inmediatamente
           get().setTokens({
             accessToken: result.accessToken,
             refreshToken: result.refreshToken,
           });
+
+          // Cargamos el perfil para que el LoginPage pueda redirigir por rol
+          await get().fetchProfile();
 
           set({ isLoading: false });
           return result;
