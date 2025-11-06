@@ -85,7 +85,7 @@ export default function UserCreateForm({ onSuccess }: Props) {
         const resp = await roleService.getRoles({ page: 1, limit: 200 });
         setAllRoles(asRoles(resp));
       } catch (error) {
-        console.error('Failed to fetch roles:', error);
+        console.error('Error al cargar los roles:', error);
         setAllRoles([]);
         setFormError('No se pudieron cargar los roles.');
       }
@@ -179,7 +179,7 @@ export default function UserCreateForm({ onSuccess }: Props) {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div>
           <label htmlFor="firstName" className={labelStyle}>
-            First Name
+            Nombre
           </label>
           <input
             id="firstName"
@@ -194,7 +194,7 @@ export default function UserCreateForm({ onSuccess }: Props) {
 
         <div>
           <label htmlFor="lastName" className={labelStyle}>
-            Last Name
+            Apellido
           </label>
           <input
             id="lastName"
@@ -210,7 +210,7 @@ export default function UserCreateForm({ onSuccess }: Props) {
 
       <div>
         <label htmlFor="email" className={labelStyle}>
-          Email
+          Correo electrónico
         </label>
         <input
           id="email"
@@ -225,7 +225,7 @@ export default function UserCreateForm({ onSuccess }: Props) {
 
       <div>
         <label htmlFor="password" className={labelStyle}>
-          Password
+          Contraseña
         </label>
         <input
           id="password"
