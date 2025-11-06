@@ -6,7 +6,6 @@ import { toast } from 'react-hot-toast';
 import EventList from '@/src/components/events/EventList';
 import ConfirmDialog from '@/src/components/ui/ConfirmDialog';
 import { useEventStore } from '@/src/stores/useEventStore';
-import { useCategoryStore } from '@/src/stores/useCategoryStore';
 import useRequireAuth from '@/src/hooks/useRequireAuth';
 import { ROUTES } from '@/src/lib/constants';
 import type { Event, EventStatus } from '@/src/lib/types';
