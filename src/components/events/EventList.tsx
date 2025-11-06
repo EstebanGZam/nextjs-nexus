@@ -14,12 +14,14 @@ interface EventListProps {
   viewMode?: 'grid' | 'table';
   isLoading?: boolean;
   showActions?: boolean;
+  showAdminActions?: boolean; // New prop for admin-specific actions
   currentPage?: number;
   totalPages?: number;
   onPageChange?: (page: number) => void;
   onEdit?: (id: string) => void;
   onDelete?: (id: string) => void;
   onManageTickets?: (id: string) => void;
+  onReject?: (id: string) => void;
   onChangeStatus?: (id: string, status: EventStatus) => Promise<void>;
   emptyMessage?: string;
   onRowClick?: (event: Event) => void;
@@ -30,12 +32,14 @@ export default function EventList({
   viewMode = 'grid',
   isLoading = false,
   showActions = false,
+  showAdminActions = false, // Default to false
   currentPage = 1,
   totalPages = 1,
   onPageChange,
   onEdit,
   onDelete,
   onManageTickets,
+  onReject,
   onChangeStatus,
   emptyMessage = 'No hay eventos disponibles',
   onRowClick,
@@ -47,7 +51,7 @@ export default function EventList({
     setIsSubmitting(`${id}-${status}`);
     try {
       await onChangeStatus(id, status);
-      toast.success(`Estado del evento actualizado a ${status}`);
+      toast.success(`Estado del evento actualizado`);
     } catch {
       // Error toast is likely handled by the store
     } finally {
@@ -83,34 +87,43 @@ export default function EventList({
         header: 'Estado',
         render: (event) => <EventStatusBadge status={event.status} />,
       },
-      createActionsColumn<Event>((event) => (
-        <div className="flex items-center justify-end gap-2">
-          {/* Status Change Actions */}
-          {event.status === EventStatus.DRAFT && (
-            <Button
-              size="sm"
-              onClick={() => handleStatusChange(event.id, EventStatus.ACTIVE)}
-              disabled={isSubmitting === `${event.id}-${EventStatus.ACTIVE}`}
-            >
-              {isSubmitting === `${event.id}-${EventStatus.ACTIVE}` ? 'Activando...' : 'Activar'}
-            </Button>
-          )}
-          {event.status === EventStatus.ACTIVE && (
-            <Button
-              size="sm"
-              onClick={() => handleStatusChange(event.id, EventStatus.DRAFT)}
-              disabled={isSubmitting === `${event.id}-${EventStatus.DRAFT}`}
-            >
-              {isSubmitting === `${event.id}-${EventStatus.DRAFT}`
-                ? 'Desactivando...'
-                : 'Desactivar'}
-            </Button>
-          )}
-
-          {/* Other Actions */}
-        </div>
-      )),
     ];
+
+    if (showAdminActions) {
+      columns.push(
+        createActionsColumn<Event>((event) => (
+          <div className="flex items-center justify-end gap-2">
+            {event.status === EventStatus.PENDING_APPROVAL && (
+              <>
+                <Button
+                  size="sm"
+                  variant="info"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleStatusChange(event.id, EventStatus.ACTIVE);
+                  }}
+                  disabled={isSubmitting === `${event.id}-${EventStatus.ACTIVE}`}
+                >
+                  {isSubmitting === `${event.id}-${EventStatus.ACTIVE}`
+                    ? 'Aprobando...'
+                    : 'Aprobar'}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="neutral"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onReject?.(event.id);
+                  }}
+                >
+                  Rechazar
+                </Button>
+              </>
+            )}
+          </div>
+        ))
+      );
+    }
 
     return (
       <div className="space-y-6">

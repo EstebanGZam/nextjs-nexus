@@ -14,7 +14,7 @@ interface NavItem {
 const navigation: NavItem[] = [
   {
     name: 'Dashboard',
-    href: '/admin',
+    href: '/organizer',
     icon: (
       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -27,8 +27,8 @@ const navigation: NavItem[] = [
     ),
   },
   {
-    name: 'Eventos',
-    href: '/admin/events',
+    name: 'Mis Eventos',
+    href: '/organizer/events',
     icon: (
       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -42,7 +42,7 @@ const navigation: NavItem[] = [
   },
   {
     name: 'Categorías',
-    href: '/admin/categories',
+    href: '/organizer/categories',
     icon: (
       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -56,7 +56,7 @@ const navigation: NavItem[] = [
   },
   {
     name: 'Recintos',
-    href: '/admin/venues',
+    href: '/organizer/venues',
     icon: (
       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -70,7 +70,7 @@ const navigation: NavItem[] = [
   },
   {
     name: 'Comentarios',
-    href: '/admin/comments',
+    href: '/organizer/comments',
     icon: (
       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -82,51 +82,9 @@ const navigation: NavItem[] = [
       </svg>
     ),
   },
-  {
-    name: 'Usuarios',
-    href: '/admin/users',
-    icon: (
-      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-        />
-      </svg>
-    ),
-  },
-  {
-    name: 'Roles',
-    href: '/admin/roles',
-    icon: (
-      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-        />
-      </svg>
-    ),
-  },
-  {
-    name: 'Permisos',
-    href: '/admin/permissions',
-    icon: (
-      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
-        />
-      </svg>
-    ),
-  },
 ];
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function OrganizerLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { logout, user } = useAuth();
@@ -146,7 +104,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   const isActive = (href: string) => {
-    if (href === '/admin') {
+    if (href === '/organizer') {
       return pathname === href;
     }
     return pathname.startsWith(href);
@@ -175,7 +133,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
                 <span className="text-lg font-bold text-white">T</span>
               </div>
-              <span className="text-lg font-semibold text-white">TicketHub</span>
             </div>
             <button
               onClick={() => setSidebarOpen(false)}
@@ -217,14 +174,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="border-t border-slate-800 p-4">
             <div className="mb-3 flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-800 text-sm font-medium text-white">
-                {user?.firstName?.charAt(0).toUpperCase() ||
-                  user?.email?.charAt(0).toUpperCase() ||
-                  'A'}
+                {user?.email?.charAt(0).toUpperCase() || 'O'}
               </div>
               <div className="flex-1 overflow-hidden">
-                <p className="truncate text-sm font-medium text-white">
-                  {user?.firstName || 'Admin'}
-                </p>
+                <p className="truncate text-sm font-medium text-white">Organizador</p>
                 <p className="truncate text-xs text-slate-400">{user?.email}</p>
               </div>
             </div>
