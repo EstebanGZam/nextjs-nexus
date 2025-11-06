@@ -16,7 +16,12 @@ const config = {
 
   // Coverage configuration
   collectCoverageFrom: [
-    'src/**/*.{js,jsx,ts,tsx}',
+    'src/lib/**/*.{js,jsx,ts,tsx}',
+    'src/hooks/**/*.{js,jsx,ts,tsx}',
+    'src/services/**/*.{js,jsx,ts,tsx}',
+    'src/stores/**/*.{js,jsx,ts,tsx}',
+    'src/components/ui/**/*.{js,jsx,ts,tsx}',
+    'src/components/auth/**/*.{js,jsx,ts,tsx}',
     '!src/**/*.d.ts',
     '!src/**/*.stories.{js,jsx,ts,tsx}',
     '!src/**/__tests__/**',
