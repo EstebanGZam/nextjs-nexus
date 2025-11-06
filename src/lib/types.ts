@@ -5,11 +5,23 @@
  */
 export enum EventStatus {
   DRAFT = 'DRAFT',
-  PRE_SALE = 'PRE_SALE',
+  PENDING_APPROVAL = 'PENDING_APPROVAL',
+  REJECTED = 'REJECTED',
   ACTIVE = 'ACTIVE',
+  IN_PROGRESS = 'IN_PROGRESS',
   SUSPENDED = 'SUSPENDED',
   CANCELLED = 'CANCELLED',
   FINISHED = 'FINISHED',
+}
+
+/**
+ * Ticket status enum - matches backend TicketStatus
+ */
+export enum TicketStatus {
+  NOT_REDEEMED = 'NOT_REDEEMED',
+  REDEEMED = 'REDEEMED',
+  PENDING_REFUND = 'PENDING_REFUND',
+  REFUNDED = 'REFUNDED',
 }
 
 /**
@@ -112,6 +124,7 @@ export interface Event {
   category: EventCategory;
   venue: Venue;
   ticketTypes?: TicketType[];
+  statusLogs?: string[];
   createdAt: Date | string;
   updatedAt: Date | string;
 }
@@ -126,7 +139,7 @@ export interface Ticket {
   ticketCode: string;
   price: number | string; // Can be string due to PostgreSQL decimal conversion
   seat: string;
-  isValidated: boolean;
+  status: TicketStatus;
 }
 
 /**
@@ -386,6 +399,14 @@ export interface UpdateEventDTO {
   venueId?: string;
   categoryId?: string;
   status?: EventStatus;
+}
+
+/**
+ * Update Event Status DTO
+ */
+export interface UpdateEventStatusDTO {
+  status: EventStatus;
+  comment?: string;
 }
 
 /**

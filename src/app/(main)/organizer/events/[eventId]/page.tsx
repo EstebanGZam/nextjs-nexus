@@ -1,23 +1,35 @@
 'use client';
 
-/**
- * Admin Event Detail Page
- * Displays detailed information about a specific event and its ticket types for admin users.
- */
-
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useEventStore } from '@/src/stores/useEventStore';
 import { showToast } from '@/src/lib/toast';
 import EventStatusBadge from '@/src/components/events/EventStatusBadge';
+import Button from '@/src/components/ui/Button';
+import ConfirmDialog from '@/src/components/ui/ConfirmDialog';
+import { EventStatus } from '@/src/lib/types';
+import SuspensionCancellationModal from '@/src/components/events/SuspensionCancellationModal';
 
-export default function AdminEventDetailPage() {
+export default function OrganizerEventDetailPage() {
   const params = useParams();
   const router = useRouter();
   const eventId = params.eventId as string;
 
-  const { currentEvent, ticketTypes, isLoading, error, fetchEventWithTicketTypes, clearError } =
-    useEventStore();
+  const {
+    currentEvent,
+    ticketTypes,
+    isLoading,
+    error,
+    fetchEventWithTicketTypes,
+    updateEventStatus,
+    clearError,
+  } = useEventStore();
+
+  const [statusAction, setStatusAction] = useState<{
+    action: 'suspend' | 'cancel' | null;
+    newStatus: EventStatus | null;
+  }>({ action: null, newStatus: null });
+  const [isChangingStatus, setIsChangingStatus] = useState(false);
 
   useEffect(() => {
     if (!eventId) return;
@@ -31,6 +43,35 @@ export default function AdminEventDetailPage() {
       clearError();
     };
   }, [eventId, fetchEventWithTicketTypes, clearError]);
+
+  const handleSuspend = () => {
+    setStatusAction({ action: 'suspend', newStatus: EventStatus.SUSPENDED });
+  };
+
+  const handleCancel = () => {
+    setStatusAction({ action: 'cancel', newStatus: EventStatus.CANCELLED });
+  };
+
+  const confirmStatusChange = async (comment: string) => {
+    if (!statusAction.newStatus) return;
+
+    try {
+      setIsChangingStatus(true);
+      await updateEventStatus(eventId, statusAction.newStatus, comment);
+      showToast.success(
+        statusAction.action === 'suspend'
+          ? 'Evento suspendido exitosamente'
+          : 'Evento cancelado exitosamente'
+      );
+      setStatusAction({ action: null, newStatus: null });
+      // Refrescar datos
+      await fetchEventWithTicketTypes(eventId);
+    } catch {
+      showToast.error('Error al cambiar el estado del evento');
+    } finally {
+      setIsChangingStatus(false);
+    }
+  };
 
   if (isLoading || !currentEvent) {
     return (
@@ -65,8 +106,8 @@ export default function AdminEventDetailPage() {
           <h3 className="mb-2 text-xl font-semibold text-red-900">Error al cargar evento</h3>
           <p className="mb-6 text-red-700">{error}</p>
           <button
-            onClick={() => router.push('/admin/events')}
-            className="rounded-md bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:outline-none"
+            onClick={() => router.push('/organizer/events')}
+            className="rounded-md bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-red-700"
           >
             Volver a eventos
           </button>
@@ -89,11 +130,18 @@ export default function AdminEventDetailPage() {
     minute: '2-digit',
   });
 
+  // Verificar qué acciones están disponibles
+  const canSuspend = event.status === EventStatus.ACTIVE;
+  const canCancel =
+    event.status === EventStatus.ACTIVE ||
+    event.status === EventStatus.SUSPENDED ||
+    event.status === EventStatus.DRAFT;
+
   return (
     <div className="min-h-screen bg-white">
       <div className="container mx-auto px-4 py-8">
         <button
-          onClick={() => router.push('/admin/events')}
+          onClick={() => router.push('/organizer/events')}
           className="mb-6 flex items-center text-slate-600 transition-colors hover:text-slate-900"
         >
           <svg className="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -104,7 +152,7 @@ export default function AdminEventDetailPage() {
               d="M15 19l-7-7 7-7"
             />
           </svg>
-          Volver a gestión de eventos
+          Volver a mis eventos
         </button>
 
         <div className="grid gap-8 lg:grid-cols-3">
@@ -168,7 +216,7 @@ export default function AdminEventDetailPage() {
                     />
                   </svg>
                   <div>
-                    <p className="font-semibold text-slate-900">Ubicacion</p>
+                    <p className="font-semibold text-slate-900">Ubicación</p>
                     <p className="text-slate-600">
                       {event.venue.name}
                       <br />
@@ -181,6 +229,35 @@ export default function AdminEventDetailPage() {
                     </p>
                   </div>
                 </div>
+              </div>
+
+              {/* Acciones del organizador */}
+              <div className="mt-6 flex gap-3 border-t pt-6">
+                <Button
+                  onClick={() => router.push(`/organizer/events/${eventId}/edit`)}
+                  variant="secondary"
+                  disabled={
+                    event.status !== EventStatus.DRAFT && event.status !== EventStatus.REJECTED
+                  }
+                >
+                  Editar Evento
+                </Button>
+                <Button
+                  onClick={() => router.push(`/organizer/events/${eventId}/tickets`)}
+                  variant="secondary"
+                >
+                  Gestionar Tickets
+                </Button>
+                {canSuspend && (
+                  <Button onClick={handleSuspend} variant="secondary" className="text-orange-600">
+                    Suspender Ventas
+                  </Button>
+                )}
+                {canCancel && (
+                  <Button onClick={handleCancel} variant="danger">
+                    Cancelar Evento
+                  </Button>
+                )}
               </div>
             </div>
 
@@ -205,8 +282,15 @@ export default function AdminEventDetailPage() {
               {ticketTypes.length === 0 ? (
                 <div className="rounded-lg bg-white p-4 text-center">
                   <p className="text-sm text-slate-600">
-                    No hay tipos de tickets disponibles para este evento.
+                    No hay tipos de tickets configurados para este evento.
                   </p>
+                  <Button
+                    onClick={() => router.push(`/organizer/events/${eventId}/tickets`)}
+                    className="mt-3"
+                    size="sm"
+                  >
+                    Configurar Tickets
+                  </Button>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -239,6 +323,29 @@ export default function AdminEventDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Suspension/Cancellation Modal */}
+      {statusAction.action && statusAction.newStatus && (
+        <SuspensionCancellationModal
+          isOpen={!!statusAction.action}
+          onClose={() => setStatusAction({ action: null, newStatus: null })}
+          onConfirm={confirmStatusChange}
+          isLoading={isChangingStatus}
+          statusType={statusAction.newStatus as 'SUSPENDED' | 'CANCELLED'}
+        />
+      )}
+
+      {/* Original ConfirmDialog for other actions (if any) */}
+      <ConfirmDialog
+        isOpen={false} // Always false, as we are using SuspensionCancellationModal for suspend/cancel
+        onClose={() => {}}
+        onConfirm={() => {}}
+        title=""
+        message=""
+        confirmText=""
+        variant="info"
+        isLoading={false}
+      />
     </div>
   );
 }
