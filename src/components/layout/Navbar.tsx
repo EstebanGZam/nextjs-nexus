@@ -102,9 +102,9 @@ export default function Navbar() {
                 </Link>
 
                 {/* Admin solo con permiso */}
-                <Can permission="manage_users">
+                <Can permission="VIEW_USERS">
                   <Link
-                    href="/admin/users"
+                    href="/admin"
                     className={`text-sm transition-colors ${
                       isActivePath(pathname, '/admin')
                         ? 'font-semibold text-blue-600'

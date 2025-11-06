@@ -25,6 +25,12 @@ export function useAuth() {
   const getPermissions = useAuthStore((s) => s.getPermissions);
   const hasPermission = useAuthStore((s) => s.hasPermission);
 
+  // Active Role methods
+  const activeRole = useAuthStore((s) => s.activeRole);
+  const getActiveRole = useAuthStore((s) => s.getActiveRole);
+  const switchRole = useAuthStore((s) => s.switchRole);
+  const getAvailableRoles = useAuthStore((s) => s.getAvailableRoles);
+
   useEffect(() => {
     if (isLoading) {
       checkAuth();
@@ -50,6 +56,11 @@ export function useAuth() {
     getRoles,
     getPermissions,
     hasPermission,
+    // Active Role
+    activeRole,
+    getActiveRole,
+    switchRole,
+    getAvailableRoles,
   } as const;
 }
 

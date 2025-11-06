@@ -8,6 +8,7 @@ import authService, {
   type LoginResult,
   verify2FA as serviceVerify2FA,
 } from '@/src/services/authService';
+import { getHighestPriorityRole, filterGenericRoles, isGenericRole } from '@/src/lib/roleUtils';
 
 // --------------------------------------------
 // Helpers
@@ -90,6 +91,7 @@ interface AuthState {
   twoFactorEnabled: boolean | null; // null = desconocido
   roles: string[]; // role names o ids (según lo que llegue)
   permissions: string[]; // si solo hay roleIds, quedará []
+  activeRole: string | null; // Rol activo para determinar la vista (ADMINISTRATOR, ORGANIZER, BUYER, STAFF)
 }
 
 interface AuthActions {
@@ -115,6 +117,11 @@ interface AuthActions {
   getPermissions: () => string[];
   hasPermission: (perm: string) => boolean;
 
+  // Active Role (para multi-rol y cambio de vista)
+  getActiveRole: () => string | null;
+  switchRole: (role: string) => void;
+  getAvailableRoles: () => string[]; // Solo roles genéricos del usuario
+
   clearError: () => void;
 }
 
@@ -135,18 +142,32 @@ export const useAuthStore = create<AuthStore>()(
       twoFactorEnabled: null,
       roles: [],
       permissions: [],
+      activeRole: null,
 
       // ========== SETTERS ==========
 
       setUser: (user) => {
         const roleNamesOrIds = extractRoleNames(user);
         const permNames = extractPermissionNames(user);
+
+        // Determinar activeRole automáticamente si no hay uno establecido
+        const currentActiveRole = get().activeRole;
+        const highestPriorityRole = getHighestPriorityRole(roleNamesOrIds);
+
+        // Solo establecer automáticamente si:
+        // 1. No hay activeRole actual
+        // 2. O el activeRole actual ya no está en la lista de roles del usuario
+        const shouldSetActiveRole =
+          !currentActiveRole ||
+          !roleNamesOrIds.some((r) => r.toUpperCase() === currentActiveRole.toUpperCase());
+
         set({
           user,
           isAuthenticated: !!user,
           twoFactorEnabled: user?.twoFactorEnabled ?? null,
           roles: roleNamesOrIds,
           permissions: permNames,
+          activeRole: shouldSetActiveRole ? highestPriorityRole : currentActiveRole,
         });
       },
 
@@ -234,6 +255,7 @@ export const useAuthStore = create<AuthStore>()(
             twoFactorEnabled: null,
             roles: [],
             permissions: [],
+            activeRole: null,
           });
 
           if (typeof window !== 'undefined') {
@@ -256,6 +278,7 @@ export const useAuthStore = create<AuthStore>()(
             isLoading: false,
             roles: [],
             permissions: [],
+            activeRole: null,
           });
         }
       },
@@ -301,6 +324,30 @@ export const useAuthStore = create<AuthStore>()(
         return perms.has(perm);
       },
 
+      // ========== ACTIVE ROLE ==========
+
+      getActiveRole: () => {
+        return get().activeRole;
+      },
+
+      switchRole: (role) => {
+        const availableRoles = get().getAvailableRoles();
+        const normalized = role.toUpperCase();
+
+        // Verificar que el rol está disponible para el usuario
+        if (!availableRoles.includes(normalized)) {
+          console.warn(`Cannot switch to role "${role}" - not available for this user`);
+          return;
+        }
+
+        set({ activeRole: normalized });
+      },
+
+      getAvailableRoles: () => {
+        const roles = get().getRoles();
+        return filterGenericRoles(roles);
+      },
+
       clearError: () => set({ error: null }),
     }),
     {
@@ -311,6 +358,7 @@ export const useAuthStore = create<AuthStore>()(
         twoFactorEnabled: state.twoFactorEnabled,
         roles: state.roles,
         permissions: state.permissions,
+        activeRole: state.activeRole,
       }),
       onRehydrateStorage: () => () => {
         try {

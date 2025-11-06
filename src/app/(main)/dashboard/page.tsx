@@ -82,7 +82,7 @@ export default function DashboardPage() {
             </Link>
 
             {/* Solo admins */}
-            <Can permission="manage_users">
+            <Can permission="VIEW_USERS">
               <Link href="/admin/users" className="group block">
                 <div className="flex items-center justify-between rounded-lg border px-4 py-3 transition-colors group-hover:border-indigo-400">
                   <span className="text-sm font-medium text-slate-800">Usuarios (Admin)</span>

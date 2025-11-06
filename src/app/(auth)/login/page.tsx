@@ -6,12 +6,7 @@ import { useRouter } from 'next/navigation';
 
 import LoginForm from '@/src/components/auth/LoginForm';
 import { useAuthStore } from '@/src/stores/useAuthStore';
-
-function computeIsAdmin(roles: string[], permissions: string[]) {
-  const hasAdminRole = roles.some((r) => r.toUpperCase() === 'ADMINISTRATOR');
-  const canManageRoles = permissions.some((p) => p.toUpperCase().includes('MANAGE_ROLES'));
-  return hasAdminRole || canManageRoles;
-}
+import { getPostLoginRedirect } from '@/src/lib/getPostLoginRedirect';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -19,8 +14,7 @@ export default function LoginPage() {
   // Importante: NO construir un objeto en el selector.
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const user = useAuthStore((s) => s.user);
-  const roles = useAuthStore((s) => s.roles);
-  const permissions = useAuthStore((s) => s.permissions);
+  const activeRole = useAuthStore((s) => s.activeRole);
   const twoFactorEnabled = useAuthStore((s) => s.twoFactorEnabled);
   const fetchProfile = useAuthStore((s) => s.fetchProfile);
 
@@ -36,10 +30,11 @@ export default function LoginPage() {
   React.useEffect(() => {
     if (!isAuthenticated) return;
     if (twoFactorEnabled) return; // si está en 2FA, no redirigimos todavía
+    if (!activeRole) return; // Esperar a que se establezca el activeRole
 
-    const admin = computeIsAdmin(roles, permissions);
-    router.replace(admin ? '/admin' : '/dashboard');
-  }, [isAuthenticated, twoFactorEnabled, roles, permissions, router]);
+    const redirectUrl = getPostLoginRedirect(activeRole);
+    router.replace(redirectUrl);
+  }, [isAuthenticated, twoFactorEnabled, activeRole, router]);
 
   return (
     <main className="min-h-dvh bg-white">
