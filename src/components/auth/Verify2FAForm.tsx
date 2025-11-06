@@ -35,8 +35,14 @@ function Verify2FAFormContent() {
   const searchParams = useSearchParams();
   const { setTokens, fetchProfile } = useAuth();
 
-  const email = React.useMemo(() => sessionStorage.getItem('temp_2fa_email'), []);
-  const password = React.useMemo(() => sessionStorage.getItem('temp_2fa_password'), []);
+  const email = React.useMemo(
+    () => (typeof window !== 'undefined' ? sessionStorage.getItem('temp_2fa_email') : null),
+    []
+  );
+  const password = React.useMemo(
+    () => (typeof window !== 'undefined' ? sessionStorage.getItem('temp_2fa_password') : null),
+    []
+  );
 
   React.useEffect(() => {
     if (!email || !password) {
