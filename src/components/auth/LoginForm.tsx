@@ -88,7 +88,8 @@ export default function LoginForm() {
           }
         }
 
-        router.push(searchParams.get('next') || ROUTES.DASHBOARD);
+        // No redirigimos aquí - dejamos que login/page.tsx maneje
+        // la redirección basada en activeRole a través de su useEffect
       } catch (err) {
         const error = err as {
           message?: string;
@@ -161,6 +162,7 @@ export default function LoginForm() {
         <label htmlFor="password" className="block text-sm font-medium text-slate-700">
           Contraseña
         </label>
+
         <input
           id="password"
           name="password"

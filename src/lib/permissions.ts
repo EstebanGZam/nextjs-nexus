@@ -25,7 +25,7 @@ export const PERMISSIONS = {
 export function hasPermission(user: User | null, permission: string): boolean {
   if (!user || !user.roles) return false;
 
-  return user.roles.some((role) => role.permissions.some((p) => p.name === permission));
+  return user.roles.some((role) => role.permissions?.some((p) => p.name === permission));
 }
 
 /**

@@ -9,9 +9,11 @@ import { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useEventStore } from '@/src/stores/useEventStore';
 import { showToast } from '@/src/lib/toast';
+import { useRequireRole } from '@/src/hooks/useRequireRole';
 import EventStatusBadge from '@/src/components/events/EventStatusBadge';
 
 export default function AdminEventDetailPage() {
+  const { isLoading: authLoading, isAuthorized } = useRequireRole('ADMINISTRATOR');
   const params = useParams();
   const router = useRouter();
   const eventId = params.eventId as string;
@@ -20,7 +22,7 @@ export default function AdminEventDetailPage() {
     useEventStore();
 
   useEffect(() => {
-    if (!eventId) return;
+    if (!eventId || !isAuthorized) return;
 
     fetchEventWithTicketTypes(eventId).catch((err) => {
       showToast.error('Error al cargar el evento');
@@ -30,7 +32,17 @@ export default function AdminEventDetailPage() {
     return () => {
       clearError();
     };
-  }, [eventId, fetchEventWithTicketTypes, clearError]);
+  }, [eventId, isAuthorized, fetchEventWithTicketTypes, clearError]);
+
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-slate-600">Cargando...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthorized) return null;
 
   if (isLoading || !currentEvent) {
     return (
