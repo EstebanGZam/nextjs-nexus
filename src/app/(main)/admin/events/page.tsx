@@ -124,7 +124,7 @@ export default function AdminEventsPage() {
       };
 
       if (filters.search) params.search = filters.search;
-      if (filters.status) params.status = filters.status;
+      if (filters.status && filters.status !== 'all') params.status = filters.status;
       if (filters.categoryId) params.categoryId = filters.categoryId;
       if (filters.venueId) params.venueId = filters.venueId;
       if (filters.dateFrom) params.dateFrom = filters.dateFrom;
@@ -144,7 +144,7 @@ export default function AdminEventsPage() {
       };
 
       if (filters.search) params.search = filters.search;
-      if (filters.status) params.status = filters.status;
+      if (filters.status && filters.status !== 'all') params.status = filters.status;
       if (filters.categoryId) params.categoryId = filters.categoryId;
       if (filters.venueId) params.venueId = filters.venueId;
       if (filters.dateFrom) params.dateFrom = filters.dateFrom;

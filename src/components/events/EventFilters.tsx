@@ -7,7 +7,7 @@ import { cn } from '@/src/lib/utils';
 
 export interface EventFilters {
   search?: string;
-  status?: EventStatus | 'all';
+  status?: EventStatus | 'all' | undefined;
   categoryId?: string;
   venueId?: string;
   dateFrom?: string;
@@ -45,8 +45,30 @@ export default function EventFilters({
 }: EventFiltersProps) {
   const [isExpanded, setIsExpanded] = React.useState(false);
 
+  // Estado local para el input de búsqueda (evita re-renders)
+  const [searchValue, setSearchValue] = React.useState(filters.search || '');
+
+  // Ref para el debounce timer
+  const debounceTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  // Sincronizar searchValue con filters.search cuando cambie externamente
+  React.useEffect(() => {
+    setSearchValue(filters.search || '');
+  }, [filters.search]);
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onFiltersChange({ ...filters, search: e.target.value });
+    const value = e.target.value;
+    setSearchValue(value); // Actualiza inmediatamente el input
+
+    // Limpia el timer anterior
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    // Aplica debounce de 500ms antes de actualizar los filtros
+    debounceTimerRef.current = setTimeout(() => {
+      onFiltersChange({ ...filters, search: value });
+    }, 500);
   };
 
   const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -70,9 +92,10 @@ export default function EventFilters({
   };
 
   const handleClearFilters = () => {
+    setSearchValue(''); // Limpia el input local
     onFiltersChange({
       search: '',
-      status: 'all',
+      status: undefined,
       categoryId: '',
       venueId: '',
       dateFrom: '',
@@ -120,7 +143,7 @@ export default function EventFilters({
           <input
             type="text"
             placeholder="Buscar eventos por título..."
-            value={filters.search || ''}
+            value={searchValue}
             onChange={handleSearchChange}
             disabled={isLoading}
             className="w-full rounded-md border border-slate-300 bg-white py-2 pr-4 pl-10 text-sm text-slate-900 placeholder-slate-400 focus:border-slate-600 focus:ring-2 focus:ring-slate-600 focus:outline-none disabled:cursor-not-allowed disabled:bg-slate-50"
@@ -275,7 +298,10 @@ export default function EventFilters({
                   Búsqueda: {filters.search}
                   <button
                     type="button"
-                    onClick={() => onFiltersChange({ ...filters, search: '' })}
+                    onClick={() => {
+                      setSearchValue('');
+                      onFiltersChange({ ...filters, search: '' });
+                    }}
                     className="ml-1 hover:text-blue-900"
                   >
                     ×
