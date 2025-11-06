@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { useAuthStore } from '@/src/stores/useAuthStore';
-import { suggestRoleByRoute } from '@/src/lib/roleUtils';
+import { suggestRoleByRoute, filterGenericRoles } from '@/src/lib/roleUtils';
 
 /**
  * useAutoSwitchRole Hook
@@ -21,12 +21,20 @@ import { suggestRoleByRoute } from '@/src/lib/roleUtils';
  */
 export function useAutoSwitchRole() {
   const pathname = usePathname();
-  const activeRole = useAuthStore((s) => s.activeRole);
-  const availableRoles = useAuthStore((s) => s.getAvailableRoles());
-  const switchRole = useAuthStore((s) => s.switchRole);
+  const previousPathnameRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
-    // Skip if no roles available or already on correct role
+    // Only run when pathname actually changes
+    if (previousPathnameRef.current === pathname) return;
+    previousPathnameRef.current = pathname;
+
+    const state = useAuthStore.getState();
+    const { activeRole, roles, switchRole } = state;
+
+    // Filter to only generic roles
+    const availableRoles = filterGenericRoles(roles);
+
+    // Skip if no roles available
     if (availableRoles.length === 0) return;
 
     // Get suggested role for current route
@@ -42,7 +50,7 @@ export function useAutoSwitchRole() {
       );
       switchRole(suggestedRole);
     }
-  }, [pathname, activeRole, availableRoles, switchRole]);
+  }, [pathname]);
 }
 
 export default useAutoSwitchRole;

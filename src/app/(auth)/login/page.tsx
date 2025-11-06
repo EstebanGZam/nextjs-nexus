@@ -30,11 +30,18 @@ export default function LoginPage() {
   React.useEffect(() => {
     if (!isAuthenticated) return;
     if (twoFactorEnabled) return; // si está en 2FA, no redirigimos todavía
-    if (!activeRole) return; // Esperar a que se establezca el activeRole
+
+    // Esperar a que activeRole esté establecido
+    // Si no hay activeRole pero hay usuario, dar un momento para que se establezca
+    if (!activeRole && user) {
+      console.log('[LoginPage] Waiting for activeRole to be set...');
+      return;
+    }
 
     const redirectUrl = getPostLoginRedirect(activeRole);
+    console.log(`[LoginPage] Redirecting to ${redirectUrl} with activeRole: ${activeRole}`);
     router.replace(redirectUrl);
-  }, [isAuthenticated, twoFactorEnabled, activeRole, router]);
+  }, [isAuthenticated, twoFactorEnabled, activeRole, user, router]);
 
   return (
     <main className="min-h-dvh bg-white">

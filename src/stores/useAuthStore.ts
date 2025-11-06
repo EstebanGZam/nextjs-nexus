@@ -8,7 +8,7 @@ import authService, {
   type LoginResult,
   verify2FA as serviceVerify2FA,
 } from '@/src/services/authService';
-import { getHighestPriorityRole, filterGenericRoles, isGenericRole } from '@/src/lib/roleUtils';
+import { getHighestPriorityRole, filterGenericRoles } from '@/src/lib/roleUtils';
 
 // --------------------------------------------
 // Helpers
@@ -35,20 +35,29 @@ function msgFromUnknown(e: unknown, fallback = 'Unexpected error'): string {
  */
 function extractRoleNames(user: User | null): string[] {
   const u = user as unknown as { roleIds?: unknown; roles?: unknown };
-  if (Array.isArray(u?.roleIds)) {
-    return (u.roleIds as unknown[]).filter(isNonEmptyString);
-  }
+
+  // PRIORIDAD 1: Intentar extraer desde roles[].name (objetos Role con nombres)
   if (Array.isArray(u?.roles)) {
     const rolesArr = u.roles as unknown[];
     const byString = rolesArr.filter(isNonEmptyString) as string[];
     if (byString.length) return byString;
-    return rolesArr
+
+    // Extraer nombres de objetos Role
+    const names = rolesArr
       .map((r) => {
         const name = (r as { name?: unknown })?.name;
         return isNonEmptyString(name) ? name : undefined;
       })
       .filter(isNonEmptyString);
+
+    if (names.length) return names;
   }
+
+  // PRIORIDAD 2: Si no hay roles con nombres, usar roleIds como fallback
+  if (Array.isArray(u?.roleIds)) {
+    return (u.roleIds as unknown[]).filter(isNonEmptyString);
+  }
+
   return [];
 }
 
@@ -150,9 +159,14 @@ export const useAuthStore = create<AuthStore>()(
         const roleNamesOrIds = extractRoleNames(user);
         const permNames = extractPermissionNames(user);
 
+        console.log('[AuthStore] setUser - Roles from user:', roleNamesOrIds);
+
         // Determinar activeRole automáticamente si no hay uno establecido
         const currentActiveRole = get().activeRole;
         const highestPriorityRole = getHighestPriorityRole(roleNamesOrIds);
+
+        console.log('[AuthStore] setUser - Current activeRole:', currentActiveRole);
+        console.log('[AuthStore] setUser - Highest priority role:', highestPriorityRole);
 
         // Solo establecer automáticamente si:
         // 1. No hay activeRole actual
@@ -161,13 +175,16 @@ export const useAuthStore = create<AuthStore>()(
           !currentActiveRole ||
           !roleNamesOrIds.some((r) => r.toUpperCase() === currentActiveRole.toUpperCase());
 
+        const finalActiveRole = shouldSetActiveRole ? highestPriorityRole : currentActiveRole;
+        console.log('[AuthStore] setUser - Final activeRole:', finalActiveRole);
+
         set({
           user,
           isAuthenticated: !!user,
           twoFactorEnabled: user?.twoFactorEnabled ?? null,
           roles: roleNamesOrIds,
           permissions: permNames,
-          activeRole: shouldSetActiveRole ? highestPriorityRole : currentActiveRole,
+          activeRole: finalActiveRole,
         });
       },
 

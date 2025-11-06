@@ -10,8 +10,6 @@ import { authSchemas, cn, formatZodErrors } from '@/src/lib/utils';
 import { ROUTES } from '@/src/lib/constants';
 import authService from '@/src/services/authService';
 import useAuth from '@/src/hooks/useAuth';
-import { getPostLoginRedirect } from '@/src/lib/getPostLoginRedirect';
-import { useAuthStore } from '@/src/stores/useAuthStore';
 
 type LoginValues = z.infer<typeof authSchemas.login> & { rememberMe: boolean };
 
@@ -91,10 +89,8 @@ export default function LoginForm() {
           }
         }
 
-        // Get the active role and redirect accordingly
-        const activeRole = useAuthStore.getState().activeRole;
-        const redirectUrl = searchParams.get('next') || getPostLoginRedirect(activeRole);
-        router.push(redirectUrl);
+        // No redirigimos aquí - dejamos que login/page.tsx maneje
+        // la redirección basada en activeRole a través de su useEffect
       } catch (err) {
         const error = err as {
           message?: string;
