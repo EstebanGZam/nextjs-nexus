@@ -1,0 +1,12 @@
+echo "🚀 Running pre-push checks..."
+
+# Type check
+echo "🔎 Type checking..."
+npm run type-check
+
+# Run unit tests with coverage
+echo "🧪 Running unit tests with coverage..."
+npm run test:coverage
+
+echo "✅ Pre-push checks passed!"
+echo "ℹ️  Note: Build and E2E tests will run in CI pipeline"
