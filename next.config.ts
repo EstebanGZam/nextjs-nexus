@@ -11,10 +11,14 @@ const nextConfig: NextConfig = {
   reactCompiler: false,
 
   async rewrites() {
+    // Use NEXT_PUBLIC_API_URL for consistency with the rest of the app
+    // Default to http://localhost:3000/api for development
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+
     return [
       {
         source: '/api/:path*',
-        destination: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/:path*`,
+        destination: `${backendUrl}/:path*`,
       },
     ];
   },

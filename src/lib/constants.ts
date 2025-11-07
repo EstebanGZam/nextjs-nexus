@@ -2,7 +2,7 @@
 
 export const API_CONFIG = {
   // The backend URL is exposed via environment variables
-  BASE_URL: process.env.NEXT_PUBLIC_BACKEND_URL,
+  BASE_URL: process.env.NEXT_PUBLIC_API_URL,
   TIMEOUT: 30000, // 30 seconds
 } as const;
 
